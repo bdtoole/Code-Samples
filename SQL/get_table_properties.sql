@@ -72,7 +72,7 @@ BEGIN
 		SET @sql =
 		'SELECT @count = COUNT(*) 
 		   FROM ' + @database + '.sys.tables
-		  WHERE name = ''' + @tbl + '''';
+		  WHERE UPPER(name) = ''' + UPPER(@tbl) + '''';
 
 		EXEC sp_executesql @sql,N'@count INT OUTPUT',@count=@count OUTPUT;
 
@@ -93,9 +93,9 @@ BEGIN
 			BEGIN
 				SET @sql =
 				'SELECT @count = COUNT(' +
-				(SELECT column_name
+				(SELECT UPPER(column_name)
 				  FROM #columns
-				 WHERE col_id = @i) + ') FROM ' + @database + '.' + @schema + '.' + @tbl + ' WHERE 1=2';
+				 WHERE col_id = @i) + ') FROM ' + @database + '.' + @schema + '.' + UPPER(@tbl) + ' WHERE 1=2';
 
 				EXEC sp_executesql @sql,N'@count INT OUTPUT',@count=@count OUTPUT;
 
@@ -133,10 +133,10 @@ BEGIN
 		   JOIN sys.types ty ON ty.system_type_id = c.system_type_id
 		   JOIN sys.schemas s ON s.schema_id = t.schema_id '
 		 IF (@columns <> 'ALL')
-			SET @sql += 'JOIN #columns col on c.name = col.column_name '
+			SET @sql += 'JOIN #columns col on UPPER(c.name) = UPPER(col.column_name) '
 		 SET @sql += 'WHERE 1=1
 						AND s.name = ''' + @schema + ''' 
-						AND t.name = ''' + @tbl + ''''
+						AND UPPER(t.name) = ''' + UPPER(@tbl) + ''''
 
 		SET NOCOUNT OFF;
 
@@ -144,6 +144,6 @@ BEGIN
 
 	END TRY
 	BEGIN CATCH
-		THROW
+		;THROW
 	END CATCH
 END
